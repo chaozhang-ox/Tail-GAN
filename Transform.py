@@ -1,3 +1,6 @@
+"""
+Convert the raw returns to strategy PnLs
+"""
 import numpy as np
 import os
 import random
