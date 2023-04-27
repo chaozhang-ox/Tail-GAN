@@ -366,7 +366,7 @@ def Train_Single(opt, dataloader, model_index, seed):
                 gen_PNL, gen_PNL_validity = discriminator(gen_R)
                 loss_G = criterion(gen_PNL_validity, PNL)
 
-                # Update the Gradient in Discriminator
+                # Update the Gradient in Generator
                 loss_G.backward()
                 optimizer_G.step()
 
@@ -393,7 +393,7 @@ def Train_Single(opt, dataloader, model_index, seed):
         np.save(join(gen_data_path, "Fake_id%d_E%d.npy" % (model_index, epoch)), gen_R.cpu().detach().numpy())
 
         if epoch % 100 == 0:
-            # Save the Terminate Model
+            # Save the Intermediate Model
             discriminator_path = join(model_path, "discriminator_id%d_E%d" % (model_index, epoch))
             generator_path = join(model_path, "generator_id%d_E%d" % (model_index, epoch))
             torch.save(discriminator.state_dict(), discriminator_path)
