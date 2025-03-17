@@ -1,5 +1,5 @@
 """
-Neural Sorting
+Neural Sorting, used to facilitate the computation of VAR and ES, to stabliize the training of TailGAN.
 """
 import torch
 

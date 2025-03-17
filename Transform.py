@@ -1,5 +1,5 @@
 """
-Convert the raw returns to strategy PnLs
+Convert the raw returns/price scenarios to strategy PnLs
 """
 import numpy as np
 import os
@@ -17,7 +17,10 @@ Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
 BoolTensor = torch.cuda.BoolTensor if cuda else torch.BoolTensor
 LongTensor = torch.cuda.LongTensor if cuda else torch.LongTensor
 
-trans_parent_data_path = '/data01/Chao_TailGAN/Static_Port_Transform'
+# Set your path
+your_path = 'your_path'
+
+trans_parent_data_path = join(your_path, 'Static_Port_Transform')
 
 
 # Convert increments to price by setting initial price as 1
@@ -44,6 +47,8 @@ def StaticPort(prices_l, n_trans, static_way, insample):
 
     trans_data_path = join(trans_parent_data_path, trans_version)
 
+    # load the transition matrix for the static portfolio
+    # for in-sample or out-of-sample
     if insample:
         store_path = join(trans_data_path, 'TransMat_IS.npy')
     else:

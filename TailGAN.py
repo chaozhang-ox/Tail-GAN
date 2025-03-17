@@ -1,5 +1,8 @@
 """
-Tail-GAN for synthetic data
+Tail-GAN for synthetic data. 
+The most important parameters are:
+strategies: a list of your trading strategies. In our paper, we use static portfolios, mean-reversion, and trend-following.
+n_epochs: number of epochs for training.
 """
 import argparse
 import os
@@ -20,6 +23,11 @@ from Dataset import Dataset_IS
 from Transform import *
 from gen_thresholds import gen_thresholds
 from util import *
+
+# set random seed 
+seed = 1
+np.random.seed(seed)
+torch.manual_seed(seed)
 
 
 parser = argparse.ArgumentParser()
@@ -49,9 +57,9 @@ parser.add_argument("--noise_name", type=str, default='t5', help="noise name")
 parser.add_argument("--alphas", type=list, default=[0.05], help="quantiles")
 parser.add_argument("--W", type=float, default=10.0, help="scale parameter for W")
 parser.add_argument("--score", type=str, default='quant', help="score function")
-parser.add_argument("--numNN", type=int, default=5, help="number of NNs")
+parser.add_argument("--numNN", type=int, default=10, help="number of NNs")
 parser.add_argument("--project", type=bool, default=True, help="Project into constraint set")
-parser.add_argument("--version", type=str, default='Single', help="version number")
+parser.add_argument("--version", type=str, default=f'Test{seed}', help="version number")
 
 opt = parser.parse_args()
 print(opt)
@@ -82,8 +90,10 @@ PNL_shape = Infer_Shape(R_shape)
 this_version = '_'.join(
     [opt.version,
      'Stk' + str(opt.n_rows),
+     opt.data_name,
      opt.noise_name,
      'E' + str(opt.n_epochs),
+     'N' + str(opt.len),
      'BS' + str(opt.batch_size),
      opt.static_way,
      '_'.join(opt.strategies),
@@ -98,13 +108,14 @@ this_version = '_'.join(
      'Q' + '+'.join([str(int(100 * a)) for a in opt.alphas]),
      'Esb' + str(opt.numNN)])
 
+# set path
+your_path = 'your_path'
 
-# Generated Data Storage Path
-gen_data_path = "/data01/Chao_TailGAN/Gens/gen_data_%s/" % this_version
+# Save Path
+gen_data_path = join(your_path, "Gens/gen_data_{this_version}")
 os.makedirs(gen_data_path, exist_ok=True)
 
-# Model Storage Path
-model_path = "/data01/Chao_TailGAN/Models/model_%s/" % this_version
+model_path = join(your_path, "Models/model_{this_version}")
 os.makedirs(model_path, exist_ok=True)
 
 
@@ -112,8 +123,12 @@ cuda = True if torch.cuda.is_available() else False
 Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
 
 
+# compute PNL of different strategies from returns
 def Compute_PNL(R):
-    # convert returns to PnLs
+    """
+    R is the return matrix
+    """
+    # convert to Prices
     prices_l = Inc2Price(R)
     port_prices_l = StaticPort(prices_l, opt.n_trans, opt.static_way, insample=True)
 
@@ -143,6 +158,7 @@ def Compute_PNL(R):
     return PNL
 
 
+# Generator is a MLP with 4 layers
 class Generator(nn.Module):
     def __init__(self):
         super(Generator, self).__init__()
@@ -169,9 +185,8 @@ class Generator(nn.Module):
         return img
 
 
-temperature_annealing_func = lambda step: opt.temp/torch.log(Tensor([2.7183 + step]))
 
-
+# Discriminator is a MLP with 3 layers
 class Discriminator(nn.Module):
     def __init__(self):
         super(Discriminator, self).__init__()
@@ -197,8 +212,6 @@ class Discriminator(nn.Module):
             indicator = torch.sign(torch.as_tensor(0.5 - alpha))
             validity[:, 2*i] = indicator * ((self.W * v < e).float() * v + (self.W * v >= e).float() * (v + self.W * e) / (1 + self.W ** 2))
             validity[:, 2*i+1] = indicator * ((self.W * v < e).float() * e + (self.W * v >= e).float() * self.W * (v + self.W * e) / (1 + self.W ** 2))
-            # validity[:, 2*i] = indicator * ((self.W * v < e).float() * (e < v).float() * v + (self.W * v >= e).float() * (v + self.W * e) / (1 + self.W ** 2) + (e >= v).float() * (v + e) / 2.0)
-            # validity[:, 2*i+1] = indicator * ((self.W * v < e).float() * (e < v).float() * e + (self.W * v >= e).float() * self.W * (v + self.W * e) / (1 + self.W ** 2) + (e >= v).float() * (v + e) / 2.0)
         return validity
 
 
@@ -241,6 +254,7 @@ def G2in_quant(e, alpha):
     return alpha * e ** 2 / 2
 
 
+# general score function
 def S_stats(v, e, X, alpha):
     """
     For a given quantile, here named alpha, calculate the score function value
@@ -253,6 +267,7 @@ def S_stats(v, e, X, alpha):
     return torch.mean(rt)
 
 
+# a specific score function requiring some constraints on VAR and ES, but having better optimization properties
 def S_quant(v, e, X, alpha, W=opt.W):
     """
     For a given quantile, here named alpha, calculate the score function value
@@ -366,7 +381,7 @@ def Train_Single(opt, dataloader, model_index, seed):
                 gen_PNL, gen_PNL_validity = discriminator(gen_R)
                 loss_G = criterion(gen_PNL_validity, PNL)
 
-                # Update the Gradient in Generator
+                # Update the Gradient in Discriminator
                 loss_G.backward()
                 optimizer_G.step()
 
@@ -393,7 +408,7 @@ def Train_Single(opt, dataloader, model_index, seed):
         np.save(join(gen_data_path, "Fake_id%d_E%d.npy" % (model_index, epoch)), gen_R.cpu().detach().numpy())
 
         if epoch % 100 == 0:
-            # Save the Intermediate Model
+            # Save the Terminate Model
             discriminator_path = join(model_path, "discriminator_id%d_E%d" % (model_index, epoch))
             generator_path = join(model_path, "generator_id%d_E%d" % (model_index, epoch))
             torch.save(discriminator.state_dict(), discriminator_path)
@@ -404,46 +419,43 @@ def Train_Single(opt, dataloader, model_index, seed):
     loss_g_l = np.array(loss_g_l)
     loss_dge = np.stack([loss_d_l, loss_g_l])
     np.save(join(gen_data_path, 'loss_id%d.npy' % model_index), loss_dge)
-    return loss_dge
 
 
 def Train(opt):
     """
-    Train multiple Tail-GANs with different random seedså
+    Train multiple Tail-GANs
     """
     # Configure data loader
-    dataset = Dataset_IS(tickers=opt.tickers, data_path="/data01/Chao_TailGAN/gan_data/%s" % opt.data_name, length=opt.len)
+    dataset = Dataset_IS(tickers=opt.tickers, data_path=join(your_path, "gan_data", opt.data_name), length=opt.len)
     dataloader = torch.utils.data.DataLoader(dataset,
                                              batch_size=opt.batch_size,
                                              shuffle=True)
 
     for iii in range(opt.numNN):
-        seed = np.random.randint(low=1, high=10000)
         print("------ Model %d Starts with Random Seed %d " % (iii, seed))
-        loss_dge = Train_Single(opt, dataloader, model_index=iii, seed=seed)
-
-        while loss_dge[-10:, 1].mean() > 0.04:
-            print(' * ' * 20)
-            print('  Attention!!!   Restart Training!!!  ')
-            print(' * ' * 20)
-            seed = np.random.randint(low=1, high=10000)
-            loss_dge = Train_Single(opt, dataloader, model_index=iii, seed=seed)
+        Train_Single(opt, dataloader, model_index=iii, seed=seed)
 
 
-def Write_Opt(opt):
-    """
-    Save the arguements for each experiment
-    """
-    opt_dic = vars(opt)
-    res = ", ".join(("{}={}".format(*i) for i in opt_dic.items()))
-    argument_path = "/data01/Chao_TailGAN/Arguments/"
-    os.makedirs(argument_path, exist_ok=True)
-    save_path = join(argument_path, this_version + ".txt")
-    text_file = open(save_path, "wt")
-    n = text_file.write(res)
-    text_file.close()
+# Some trained models may not converge well, we only use those models with a good converge
+# This selection is based on the training data, so no look-forward bias
+def Screen_Ensemble(thres_perc=50):
+    loss_l = []
+    for j in range(opt.numNN):
+        # load loss, focus on the last generator loss
+        loss_np = np.load(join(gen_data_path, 'loss_id%d.npy' % j))
+        loss_l.append(loss_np[:, 1].iloc[-1])
+
+    threshold_loss = np.percentile(loss_l, thres_perc)
+    select_l = []
+    for j in range(opt.numNN):
+        if loss_l[j] <= threshold_loss:
+            select_l.append(j)
+        else:
+            pass
+    return select_l
+
 
 
 if __name__ == "__main__":
-    Write_Opt(opt)
     Train(opt)
+    select_l = Screen_Ensemble()

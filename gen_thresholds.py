@@ -12,11 +12,13 @@ import torch
 from torch import nn
 
 from Transform import Tensor, Inc2Price, movingaverage
-parent_data_path = '/data01/Chao_TailGAN/gan_data/'
+
+your_path = 'your_path'
+parent_data_path = join(your_path, 'gan_data')
 
 
 def gen_thresholds(data_name, tickers, strategy, percentile_l, length, WH):
-    thresholds_data_folder = join('/data01/Chao_TailGAN/', 'Thresholds_20221124', data_name)
+    thresholds_data_folder = join(your_path, 'Thresholds', data_name)
     os.makedirs(thresholds_data_folder, exist_ok=True)
 
     if 'MR' in strategy and 'Port' not in strategy:
