@@ -1,6 +1,6 @@
 # Tail-GAN: Learning to Simulate Tail Risk Scenarios
 
-This is the README file for the project Tail-GAN: Learning to Simulate Tail Risk Scenarios. It provides an overview of the project structure and instructions on how to use and contribute to the codebase.
+This is the README file for the project Tail-GAN: Learning to Simulate Tail Risk Scenarios (https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3812973). It provides an overview of the project structure and instructions on how to use and contribute to the codebase.
 
 ## Table of Contents
 
