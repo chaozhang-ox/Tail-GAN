@@ -41,5 +41,3 @@ To run the reproducibility check, the following computing environment and packag
     - PyTorch 2.0.1+cu117
     - numpy 1.22.3
     - pandas 2.0.3
-    - scikit-learn 1.3.0
-    - matplotlib 3.7.2
