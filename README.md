@@ -17,9 +17,9 @@ The project is organized as follows:
 - `util.py`: Neural Sorting, used to facilitate the computation of VAR and ES, to stabliize the training of TailGAN.
 - `gen_synthetic.py`: Generate synthetic data
 - `gen_static_port.py`: Create transformation matrix used to generate static portfolios
-- `gen_thresholds.py`: Estimate the thresholds for producing trading signals based on training data
+- `gen_thresholds.py`: Estimate thresholds for generating trading signals based on training data.
 - `Transform.py`: Convert the raw returns/price scenarios to strategy PnLs
-- `TailGAN.py`: Tail-GAN training.
+- `TailGAN.py`: Implement the Tail-GAN training process.
 
 ## Usage
 
@@ -27,10 +27,10 @@ To use the project, follow these steps:
 
 1. Run gen_synthetic.py to create synthetic data.
 2. Run gen_static_port.py and gen_thresholds.py sequentially to prepare your trading strategies.
-3. Run TailGAN.py to generate new scenarios.
+3. Run TailGAN.py to train the model and generate new scenarios.
 
 ## Data
-Except the synthetic data, the data used in Section "Application to simulation of intraday market scenarios" is LOBSTER (https://lobsterdata.com/), which needs to be purchased by users.
+In addition to the generated synthetic data, the dataset used in the section "Application to Simulation of Intraday Market Scenarios" comes from LOBSTER (https://lobsterdata.com/), which needs to be purchased by users.
 
 ## Computing Environment
 To run the reproducibility check, the following computing environment and package(s) are required:
