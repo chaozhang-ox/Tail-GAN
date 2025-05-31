@@ -8,6 +8,7 @@ This is the README file for the project Tail-GAN: Learning to Simulate Tail Risk
 - [Usage](#usage)
 - [Data](#data)
 - [Computing Environment](#computing-environment)
+- [Citation](#citation)
 
 
 ## Project Structure
@@ -15,29 +16,29 @@ This is the README file for the project Tail-GAN: Learning to Simulate Tail Risk
 ```
 TailGAN/
 ├── data/                     # raw & processed datasets
-├── scripts/
-│   ├── gen_synthetic.py      # synthetic return paths (§5.1)                  -
-│   ├── gen_static_port.py    # static portfolio matrices (§3.1)               –
-│   ├── gen_thresholds.py     # MR/TF signal thresholds (App. C.1)             –
-│   ├── Dataset.py            # PyTorch Dataset helpers                        –
-│   ├── Transform.py          # price → PnL utilities                          –
-│   ├── util.py               # differentiable sorting, misc helpers           –
-│   ├── TailGAN.py            # **Tail-GAN** training loop (Alg. 1)            Fig 3,10   Tbl 1
-│   ├── WGAN.py               # Wasserstein-GAN baseline                       –
-│   ├── GOM.py                # supervised “Generative-Only Model” (§5.3)      Fig 7      Tbl 4,5
-│   ├── Evaluation.py         # relative-error RE(N), generalisation dq, ds    Tbl 1,3,6,8
-│   ├── Rejection_rate.py     # Coverage & Score tests (§4.2)                  Tbl 2
-│   ├── EigenPort.py          # eigen-portfolio construction (§5.4)            Fig 8,14   Tbl 6,9
-│   ├── Plot_Training.py      # training-error curves                          Fig 7,9,10,14
-│   ├── Plot_Quantile_PnL.py  # rank-frequency & VaR charts                Fig 4,11,16,17
-│   ├── Plot_Corr_Auto.py     # correlation / autocorr diagnostics         Fig 5,6,12,13 
+├── gen_synthetic.py      # synthetic return paths (§5.1)                  -
+├── gen_static_port.py    # static portfolio matrices (§3.1)               –
+├── gen_thresholds.py     # MR/TF signal thresholds (App. C.1)             –
+├── Dataset.py            # PyTorch Dataset helpers                        –
+├── Transform.py          # price → PnL utilities                          –
+├── util.py               # differentiable sorting, misc helpers           –
+├── TailGAN.py            # **Tail-GAN** training loop (Alg. 1)            Fig 3,10   Tbl 1
+├── WGAN.py               # Wasserstein-GAN baseline                       –
+├── GOM.py                # supervised “Generative-Only Model” (§5.3)      Fig 7      Tbl 4,5
+├── Evaluation.py         # relative-error RE(N), generalisation dq, ds    Tbl 1,3,6,8
+├── Rejection_rate.py     # Coverage & Score tests (§4.2)                  Tbl 2
+├── EigenPort.py          # eigen-portfolio construction (§5.4)            Fig 8,14   Tbl 6,9
+├── Plot_Training.py      # training-error curves                          Fig 7,9,10,14
+├── Plot_Quantile_PnL.py  # rank-frequency & VaR charts                    Fig 4,11,16,17
+├── Plot_Corr_Auto.py     # correlation / autocorr diagnostics             Fig 5,6,12,13 
 └── README.md
 ```
 
-### Script-to-paper map at a glance
+### Script-to-paper map
 
 | Paper artefact | Script(s) that generate it |
 |----------------|---------------------------|
+| **Table 1** (Main results)          | `TailGAN.py`, `Evaluation.py`|
 | **Table 2** (Coverage & Score test) | `Rejection_rate.py` |
 | **Table 3** (Multiple risk levels)  | `TailGAN.py`, `Evaluation.py` with `--alphas [0.01,0.05,0.10]` |
 | **Table 4** (Tail-GAN vs GOM)       | `GOM.py`, `TailGAN.py`, `Evaluation.py` |
